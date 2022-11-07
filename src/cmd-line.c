@@ -32,28 +32,30 @@ void printVersion(int version) {
 
 void parseArgs() {
 	char *from, *end, *into;
+	word *nargvp;
 	nargc = 0;
 
 	from = *DOSVEC + LBUF;
 	into = cl_temp;
 	end = from + CL_SIZE;
 	*end = ATEOL;
+	nargvp = (word *)nargv;
 
 	hexDump("from", from, 64);
 	
-	// now convert it to an array of strings
 	// copy DOS memory to our buffer
-	int i = 0;
 	bool hitEOL = false;
-	while (i < CL_SIZE && !hitEOL) {
-		char c = *(from + i);
-		*(cl_temp + i) = c;
+	while (from < end && !hitEOL) {
+		char c = *from++;
+		*into++ = c;
 		if (c == ATEOL) hitEOL = true;
-		i++;
 	}
-	*(cl_temp + i) = 0; // null terminate at the end
-	hexDump("cl_temp", cl_temp, i + 1);
+	*into = 0; // null terminate at the end
+	hexDump("cl_temp", cl_temp, CL_SIZE);
 
+	// redo strings putting 0 between args to turn into a list
+	from = *DOSVEC + LBUF;
+	into = cl_temp;
 	bool inArg = false;
 	while (from < end && nargc < MAX_ARGS) {
 		char c = *from++;
@@ -65,9 +67,7 @@ void parseArgs() {
 		};
 		if (!inArg) {
 			inArg = true;
-			// TODO change to words, so 1 operation
-			*(nargv + nargc * 2) = LOBYTE(into);
-			*(nargv + nargc * 2 + 1) = HIBYTE(into);
+			*nargvp++ = (word)into;
 			nargc++;
 			printf("clx: %04p, nargc: %d\n", into, nargc);
 		}
@@ -77,8 +77,6 @@ void parseArgs() {
 	*into = 0;
 
 	hexDump("nargv2 after", nargv, 32);
-	printf("final i: %d, cl_temp: %04p\n", i, cl_temp);
-	
 }
 
 void hexDump (char *desc, void *addr, int len) {

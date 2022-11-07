@@ -1,6 +1,6 @@
-# kickc-template-project
+# cmd-line
 
-A template project for projects using
+Command line args for 
 [kickc](https://gitlab.com/camelot/kickc) c compiler.
 
 
@@ -10,6 +10,10 @@ A template project for projects using
 # build the xex
 make
 
-# run under altirra
-make EMURUN=bin/simple.xex wine_altirra
+# This will create cmd-line.xex which needs to be copied onto an atr disk and booted into SDX.
+
+# copy bin file and create mjf.atr from contents of directory
+cp bin/cmd-line.xex ../../for-atr/
+dir2atr -Q ../../tnfsd/mjf.atr ../../for-atr
+
 ```

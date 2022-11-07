@@ -6,5 +6,5 @@
 
 .segmentdef File [segments="Program", modify="XexFormat", _RunAddr=main]
 .segmentdef Program [segments="Code, Data"]
-.segmentdef Code [start=$1000]
+.segmentdef Code [start=$2000]
 .segmentdef Data [startAfter="Code"]

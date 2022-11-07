@@ -7,6 +7,12 @@ typedef void (*VEC_TYPE)(void);
 #define HIBYTE(w) BYTE1(w)
 #define LOBYTE(w) BYTE0(w)
 
+// Start vector for disk (or non-cartridge) software
+// Used by SDX to hold a pointer to COMTAB, where various cmd line and other SDX values
+// can be read. See https://atariwiki.org/wiki/attach/SpartaDOS/SpartaDOS%20X%204.48%20User%20Guide.pdf
+// Particularly useful is COMTAB+LBUF(63), the cmd line buffer.
+char ** const DOSVEC = (char **) 0x0A;
+
 // Internal realtime clock at 0x12, 0x13, 0x14.
 // Location 0x14 increments every stage 1 VBLANK interrupt
 // (1/60 second = 1 jiffy) until it reaches #0xFF, then increments 0x13, etc.
@@ -51,6 +57,8 @@ unsigned char const * OS_dvstat = (unsigned char *) 0x2EA;
 // 0x2EC: maximum device time-out value in seconds. value of 60 = 64 seconds
 // 0x2ED: number of bytes in output buffer.
 
+// Internal hardware value for the last key pressed. POKE CH with 255 ($FF; no key pressed) to clear it
+//unsigned char const * CH = (unsigned char *) 0x2FC;
 
 // OS_dcb - device control block
 #define OS_dcb (*(struct __dcb*) 0x300)
@@ -97,7 +105,7 @@ char * const PORTB = (char*)0xD301;
 // Display list pointer. Tells the OS the address of the display list
 // instructions about what screen mode(s) to display and where to
 // find the screen data. See also shadow register SDLIST ($230, $231).
-word * const DLIST = (word*)0xD402;
+char ** const DLIST = (char **)0xD402;
 
 // (W) Character base address; the location of the start of the
 // character set, either the standard Atari set or a user-designed set.

@@ -1,5 +1,6 @@
 /**
- * Simple conio for E:
+ * A minimal conio for E:
+ * This cannot be combined with <printf.h> else you get conflicts
  */
 
 #include <string.h>
@@ -47,4 +48,17 @@ char get_char() {
 	OS_iocb0.command=IOCB_GETCHR;
 	ciov();
 	return buf;
+}
+
+unsigned char kbhit() {
+	if (*CH == 0xff) return 0; else return 1;
+}
+
+inline void clrkb() {
+	*CH = 0xff;
+}
+
+void waitkey() {
+	while(!kbhit()) ;
+	clrkb();
 }

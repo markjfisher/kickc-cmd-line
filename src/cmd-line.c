@@ -31,14 +31,14 @@ void printVersion(int version) {
 }
 
 void parseArgs() {
-	char *from;
+	char *from, *end, *into;
 	nargc = 0;
 
-	// buf is the area to store argv pointers in.
-	*(cl_temp + CL_SIZE) = ATEOL; // initialise buffer
-
-	// get location of start of buffer
 	from = *DOSVEC + LBUF;
+	into = cl_temp;
+	end = from + CL_SIZE;
+	*end = ATEOL;
+
 	hexDump("from", from, 64);
 	
 	// now convert it to an array of strings
@@ -54,30 +54,27 @@ void parseArgs() {
 	*(cl_temp + i) = 0; // null terminate at the end
 	hexDump("cl_temp", cl_temp, i + 1);
 
-	i = 0;
-	hitEOL = false;
 	bool inArg = false;
-	while (i++ < CL_SIZE && nargc < MAX_ARGS) {
-		char c = *(from + i - 1);
+	while (from < end && nargc < MAX_ARGS) {
+		char c = *from++;
 		if (c == ATEOL) break;
 		if (c == ' ') {
-			if (inArg) {
-				// terminate the string
-				*(cl_temp + i - 1) = 0;
-			}
+			if (inArg) *into++ = 0; // terminate string
 			inArg = false;
 			continue;
 		};
 		if (!inArg) {
 			inArg = true;
-			*(nargv + nargc * 2) = LOBYTE(cl_temp + i - 1);
-			*(nargv + nargc * 2 + 1) = HIBYTE(cl_temp + i - 1);
+			// TODO change to words, so 1 operation
+			*(nargv + nargc * 2) = LOBYTE(into);
+			*(nargv + nargc * 2 + 1) = HIBYTE(into);
 			nargc++;
-			printf("clx: %04p, nargc: %d\n", cl_temp + i - 1, nargc);
+			printf("clx: %04p, nargc: %d\n", into, nargc);
 		}
+		into++;
 	}
 	// finally set last terminal 0
-	*(cl_temp + i - 1) = 0;
+	*into = 0;
 
 	hexDump("nargv2 after", nargv, 32);
 	printf("final i: %d, cl_temp: %04p\n", i, cl_temp);

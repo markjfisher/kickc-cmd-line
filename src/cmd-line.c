@@ -3,16 +3,10 @@
 #include <6502.h>
 #include <printf.h>
 #include "atari-mem.h"
-// #include "atari-util.h"
-// #include "conio-plus.h"
 #include "dos.h"
 #include "util.h"
 
 int main(int argc, char** argv) {
-	// read the DOS command line into our own values
-	printVersion(3);
-	
-	// get the args
 	parseArgs();
 	argc = nargc;
 	argv = (char **)nargv;
@@ -25,11 +19,6 @@ int main(int argc, char** argv) {
 	return 0;
 }
 
-void printVersion(int version) {
-	// unsigned char nBuf[10];
-	printf("version: %d\n", version); // print(itoa(version, nBuf, 10)); print("\n");
-}
-
 void parseArgs() {
 	char *from, *end, *into;
 	word *nargvp;
@@ -40,8 +29,6 @@ void parseArgs() {
 	end = from + CL_SIZE;
 	*end = ATEOL;
 	nargvp = (word *)nargv;
-
-	hexDump("from", from, 64);
 	
 	// copy DOS memory to our buffer
 	bool hitEOL = false;
@@ -51,32 +38,31 @@ void parseArgs() {
 		if (c == ATEOL) hitEOL = true;
 	}
 	*into = 0; // null terminate at the end
-	hexDump("cl_temp", cl_temp, CL_SIZE);
 
-	// redo strings putting 0 between args to turn into a list
+	// convert buffer to list of null terminated strings, starting at beginning of each argument
 	from = *DOSVEC + LBUF;
 	into = cl_temp;
 	bool inArg = false;
 	while (from < end && nargc < MAX_ARGS) {
 		char c = *from++;
 		if (c == ATEOL) break;
+		// skip spaces, but if we're in an arg already, terminate the string we were accumulating
 		if (c == ' ') {
-			if (inArg) *into++ = 0; // terminate string
+			if (inArg) *into = 0; // terminate string
 			inArg = false;
+			into++;
 			continue;
 		};
+		// mark start of new argument in list of pointers
 		if (!inArg) {
 			inArg = true;
 			*nargvp++ = (word)into;
 			nargc++;
-			printf("clx: %04p, nargc: %d\n", into, nargc);
 		}
 		into++;
 	}
 	// finally set last terminal 0
 	*into = 0;
-
-	hexDump("nargv2 after", nargv, 32);
 }
 
 void hexDump (char *desc, void *addr, int len) {

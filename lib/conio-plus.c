@@ -7,6 +7,8 @@
 #include "atari-mem.h"
 #include "atari-cio.h"
 
+unsigned char const * CH = (unsigned char *) 0x2FC;
+
 void printl(const char* c, unsigned int l) {
 	char *p = c;
 

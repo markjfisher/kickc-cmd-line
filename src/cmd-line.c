@@ -30,39 +30,25 @@ void parseArgs() {
 	*end = ATEOL;
 	nargvp = (word *)nargv;
 	
-	// copy DOS memory to our buffer
-	bool hitEOL = false;
-	while (from < end && !hitEOL) {
-		char c = *from++;
-		*into++ = c;
-		if (c == ATEOL) hitEOL = true;
-	}
-	*into = 0; // null terminate at the end
-
-	// convert buffer to list of null terminated strings, starting at beginning of each argument
-	from = *DOSVEC + LBUF;
-	into = cl_temp;
+	// copy DOS memory to our buffer, skipping excess space and keeping track of each new arg's address
 	bool inArg = false;
 	while (from < end && nargc < MAX_ARGS) {
 		char c = *from++;
 		if (c == ATEOL) break;
-		// skip spaces, but if we're in an arg already, terminate the string we were accumulating
 		if (c == ' ') {
-			if (inArg) *into = 0; // terminate string
+			if (inArg) *into++ = 0;
 			inArg = false;
-			into++;
 			continue;
-		};
-		// mark start of new argument in list of pointers
+		}
 		if (!inArg) {
 			inArg = true;
 			*nargvp++ = (word)into;
 			nargc++;
 		}
-		into++;
+		
+		*into++ = c;
 	}
-	// finally set last terminal 0
-	*into = 0;
+	*into = 0; // null terminate at the end
 }
 
 void hexDump (char *desc, void *addr, int len) {

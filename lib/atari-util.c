@@ -1,4 +1,4 @@
-lude "atari-mem.h"
+#include "atari-mem.h"
 
 void waitFrames(signed word frames) {
 	while(frames > 0) {

@@ -8,15 +8,11 @@
 #pragma code_seg(Code)
 #pragma data_seg(Data)
 
-volatile char __dummy = 0;
+#pragma args_parser(parseArgs, nargc, nargv)
 
 int main(int argc, char** argv) {
-	// purely to keep parseArgs from being optimized away. It's run during INIT of xex.
-	if (__dummy == 0x96) parseArgs();
-	argc = nargc;
-	argv = (char **)nargv;
-
-	printf("argc: %d\n", argc);
+	printf("cmdline args parsing example. v1\n");
+	printf("   argc = (%04p) %d\n", &argc, argc);
 	for(int i=0; i < argc; i++) {
 		printf("argv[%d] = %s\n", i, argv[i]);
 	}
@@ -55,11 +51,10 @@ void parseArgs() {
 		*into++ = c;
 	}
 	*into = 0; // null terminate at the end
-
 }
 
 // nargc needs __ma to stop it getting zero'd by compiler after init block loaded
 // not sure why it insists on doing that. it's code generated that does this setting to 0, not init loading clearing it
-__export __ma int nargc;
+__export __mem __ma int nargc = 0;
 __export char nargv[MAX_ARGS * 2 + 1];
 __export char cl_temp[CL_SIZE + 1];

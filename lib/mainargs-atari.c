@@ -5,12 +5,12 @@
 #pragma data_seg(CLIData)
 
 void parseArgs() {
-	detect_dos();
-	get_args();
+	get_args(detect_dos());
 }
 
-void detect_dos() {
-	kickasm(uses __dos_type) {{
+char detect_dos() {
+	char dos_type = 0xff;
+	kickasm(uses dos_type) {{
 
 .const SPARTADOS    = 0
 .const REALDOS      = 1
@@ -60,6 +60,8 @@ spdos:  lda     DOS+3           // 'B' in BW-DOS
 		bne     spdos_real
 
 		lda     #BWDOS
+		// the following 2C bytes avoid the need for a JMP, as they do a harmless BIT instruction that ALSO eats the 2 bytes after them
+		// Thus instead of any jump instructions, a bunch of effective NOP commands happen until the final _set location is hit.
 		.byte   $2C             // BIT <abs>
 
 spdos_real:
@@ -73,18 +75,20 @@ rdos:   lda     #REALDOS
 		.byte   $2C             // BIT <abs>
 
 xdos:   lda     #XDOS
-_set:   sta     __dos_type
+_set:   sta     dos_type
 done:   
 		// There will be an rts done for us
 		// rts
 
 	}};
+	return dos_type;
 	
 }
 
-void get_args() {
-	char ptr1 = 0;
-	kickasm(uses ptr1, uses __argc, uses __argv, uses __dos_type) {{
+void get_args(char dos_type) {
+	int ptr1 = 0; // a temporary location for the ASM routine, kickc will make this ZP normally
+
+	kickasm(uses ptr1, uses __argc, uses __argv, uses dos_type) {{
 
 .const MAXARGS = 16            // max. amount of arguments in arg. table
 .const CL_SIZE = 64            // command line buffer size
@@ -99,16 +103,16 @@ void get_args() {
 .const MAX_DOS_WITH_CMDLINE = XDOS
 
 initmainargs:
-        lda     __dos_type      // which DOS?
+        lda     dos_type      // which DOS?
         cmp     #MAX_DOS_WITH_CMDLINE + 1
         bcc     argdos
         beq     argdos
         rts
 
-// Initialize ourcl buffer
+// Initialize __cl_buffer buffer
 
 argdos: ldy     #ATEOL
-        sty     ourcl+CL_SIZE
+        sty     __cl_buffer+CL_SIZE
 
 // Move SpartaDOS/XDOS command line to our own buffer
 
@@ -131,7 +135,7 @@ sparta: lda     DOSVEC
 
 cpcl0:  ldy     #0
 cpcl:   lda     (ptr1),y
-        sta     ourcl,y
+        sta     __cl_buffer,y
         iny
         cmp     #ATEOL
         beq     movdon
@@ -139,13 +143,13 @@ cpcl:   lda     (ptr1),y
         bne     cpcl
 
 movdon: lda     #0
-        sta     ourcl,y         // null terminate behind ATEOL
+        sta     __cl_buffer,y         // null terminate behind ATEOL
 
 // Turn command line into argv table
 
         //ldy    #0
         tay
-eatspc: lda     ourcl,y         // eat spaces
+eatspc: lda     __cl_buffer,y         // eat spaces
         cmp     #ATEOL
         beq     finargs
         cmp     #SPACE
@@ -160,11 +164,11 @@ eatspc: lda     ourcl,y         // eat spaces
 rpar:   lda     __argc          // low-byte
         asl
         tax                     // table index
-        tya                     // ourcl index
+        tya                     // __cl_buffer index
         clc
-        adc     #<ourcl
+        adc     #<__cl_buffer
         sta     __argv,x
-        lda     #>ourcl
+        lda     #>__cl_buffer
         adc     #0
         sta     __argv+1,x
         ldx     __argc
@@ -176,7 +180,7 @@ rpar:   lda     __argc          // low-byte
 // Skip this arg.
 
 skiparg:
-        ldx     ourcl,y
+        ldx     __cl_buffer,y
         cpx     #ATEOL          // end of line?
         beq     eopar
         cpx     #SPACE
@@ -189,7 +193,7 @@ skiparg:
 
 eopar:
         lda     #0
-        sta     ourcl,y
+        sta     __cl_buffer,y
         iny                     // y behind arg.
         cpx     #ATEOL          // was it the last arg?
         bne     eatspc
@@ -207,7 +211,6 @@ finargs:
 	}};
 }
 
-__export __ma char __dos_type = 0xff;
 __export __ma int __argc = 0;
 __export char __argv[16 * 2 + 1];
-__export char ourcl[64 + 1];
+__export char __cl_buffer[64 + 1];

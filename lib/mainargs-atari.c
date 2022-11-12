@@ -1,6 +1,3 @@
-// #include "atari-mem.h"
-// #include "dos.h"
-
 // routines adopted from cc65 getargs.s and dosdetect.s
 // to minimise initialisation code rather than convert from C.
 
@@ -13,7 +10,8 @@ void parseArgs() {
 }
 
 void detect_dos() {
-	kickasm {{
+	kickasm(uses __dos_type) {{
+
 .const SPARTADOS    = 0
 .const REALDOS      = 1
 .const BWDOS        = 2
@@ -26,9 +24,6 @@ void detect_dos() {
 
 .const COMTAB  = 0             // DOS entry jump vector
 .const ZCRNAME = 3             // file name crunch routine jump vector
-.const BUFOFF  = 10            // next parameter buffer offset
-.const COMFNAM = 33            // destination buffer for crunch routine
-.const LBUF    = 63            // command line input buffer
 
 .const DOSVEC  = $0A
 .const DOS     = $0700
@@ -89,7 +84,7 @@ done:
 
 void get_args() {
 	char ptr1 = 0;
-	kickasm(uses ptr1) {{
+	kickasm(uses ptr1, uses __argc, uses __argv, uses __dos_type) {{
 
 .const MAXARGS = 16            // max. amount of arguments in arg. table
 .const CL_SIZE = 64            // command line buffer size
@@ -103,13 +98,12 @@ void get_args() {
 .const XDOS         = 4
 .const MAX_DOS_WITH_CMDLINE = XDOS
 
-nargdos:
-		rts
-
 initmainargs:
         lda     __dos_type      // which DOS?
         cmp     #MAX_DOS_WITH_CMDLINE + 1
-        bcs     nargdos
+        bcc     argdos
+        beq     argdos
+        rts
 
 // Initialize ourcl buffer
 
@@ -213,7 +207,7 @@ finargs:
 	}};
 }
 
-__export __mem __ma char __dos_type = 0xff;
-__export __mem __ma int __argc = 0;
+__export __ma char __dos_type = 0xff;
+__export __ma int __argc = 0;
 __export char __argv[16 * 2 + 1];
 __export char ourcl[64 + 1];

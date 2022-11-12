@@ -1,6 +1,7 @@
 #pragma target(project)
 
 #include <printf.h>
+#include "cmdargs-atari.h"
 #include "atari-mem.h"
 #include "dos.h"
 // #include "conio-plus.h"
@@ -8,7 +9,7 @@
 #pragma code_seg(Code)
 #pragma data_seg(Data)
 
-#pragma args_parser(parseArgs, nargc, nargv)
+#pragma args_parser(parseArgs, __argc, __argv)
 
 int main(int argc, char** argv) {
 	printf("cmdline args parsing example. v1\n");
@@ -21,12 +22,43 @@ int main(int argc, char** argv) {
 
 #pragma code_seg(CLICode)
 #pragma data_seg(CLIData)
-void parseArgs() {
+void parseArgsOld() {
 	char *from, *end, *into;
 	word *nargvp;
 	nargc = 0;
+
+	int dos_type = NODOS;
+	// detect the DOS version
+	if (*DOS == 'S') {
+		if (*(DOS+3) == 'B' && *(DOS+4) == 'W') {
+			dos_type = BWDOS;
+		} else {
+			dos_type = SPARTADOS;
+		}
+	} else if(*DOS == 'M') {
+		dos_type = MYDOS;
+	} else if (*DOS == 'X') {
+		dos_type = XDOS;
+	} else if (*DOS == 'R') {
+		dos_type = REALDOS;
+	} else {
+		// OS/A+ has JMP instructions at DOSVEC+COMTAB and DOSVEC+ZCRNAME and DOSVEC + 6
+		char *dvp = *DOSVEC;
+		if ( *(dvp + COMTAB) == 0x4c && *(dvp + ZCRNAME) == 0x4c && *(dvp + 6) == 0x4c) {
+			dos_type = OSADOS;
+		}
+	}
+	// A bit hacky, all the dos types are ordered so the ones with CMD processing are first
+	// But if we're above the max, nothing to process so just return
+	if (dos_type > MAX_DOS_WITH_CMDLINE ) return;
 	
-	from = *DOSVEC + LBUF;
+	// Find the memory buffer location of the command line
+	if (dos_type == XDOS) {
+		from = XLINE;
+	} else {
+		// Spartados style dos
+		from = *DOSVEC + LBUF;
+	}
 	into = cl_temp;
 	end = from + CL_SIZE;
 	*end = ATEOL;

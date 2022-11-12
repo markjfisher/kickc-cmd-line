@@ -38,6 +38,7 @@ ASMFLAGS :=
 
 # Verbosity flags for kickc
 VERBOSITY := -vasmout
+# -vcreate
 
 # Emulator command, supported includes: wine_altirra, ... TODO add others if windows support reinstated (e.g. win_atari800, win_altirra)
 # Default: wine_altirra (the wine emulator on linux to run altirra)

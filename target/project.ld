@@ -9,4 +9,4 @@
 .segmentdef Code [start=$2000]
 .segmentdef Data [startAfter="Code"]
 .segmentdef CLIData [startAfter="Data"]
-.segmentdef CLICode [start=$3000, modify="XexInit", _InitAddr=parseArgs]
+.segmentdef CLICode [start=$3000]

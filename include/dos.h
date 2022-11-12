@@ -20,4 +20,16 @@
 #define CL_SIZE  64     /* buffer size to work with command line  */
 #define ATEOL    0x9b   /* EOL char */
 
+#define SPARTADOS 0
+#define REALDOS   1
+#define BWDOS     2
+#define OSADOS    3     /* OS/A+ */
+#define XDOS      4
+#define ATARIDOS  5
+#define MYDOS     6
+#define NODOS     255
+// The DOSes with dos_type below or equal MAX_DOS_WITH_CMDLINE do support
+// command line arguments.
+#define MAX_DOS_WITH_CMDLINE  XDOS
+
 #endif

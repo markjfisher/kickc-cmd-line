@@ -72,6 +72,10 @@ unsigned char const * OS_dvstat = (unsigned char *) 0x2EA;
 #define OS_iocb6 (*(struct __iocb*) 0x3A0)
 #define OS_iocb7 (*(struct __iocb*) 0x3B0)
 
+// DOS start point
+char * const DOS = (char *) 0x700;
+// Buffer location for command line in XDOS
+char * const XLINE = (char *) 0x880;
 
 // (W) Priority selection register. PRIOR establishes which objects
 // on the screen (players, missiles, and playfields) will be in front of

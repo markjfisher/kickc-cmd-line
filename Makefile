@@ -41,7 +41,7 @@ VERBOSITY := -vasmout
 # -vcreate
 
 # Emulator command, supported includes: wine_altirra, ... TODO add others if windows support reinstated (e.g. win_atari800, win_altirra)
-# Default: wine_altirra (the wine emulator on linux to run altirra)
+# Default: wsl_altirra. set to wine_altirra on true linux (i.e. not WSL)
 EMUCMD :=
 
 # Set the emulator target to run. No default. Point it to absolute path of binary the emulator needs to run
@@ -127,9 +127,10 @@ endif
 # Set EMUCMD to override.
 win_atari800 := atari800 -windowed -xl -pal -nopatchall -run
 wine_altirra := wine $(ALTIRRA_HOME)/Altirra64.exe
+wsl_altirra  := $(ALTIRRA_HOME)/Altirra64.exe
 
 ifeq ($(EMUCMD),)
-  EMUCMD := wine_altirra
+  EMUCMD := wsl_altirra
 endif
 
 MKDIR = mkdir -p $1
@@ -169,7 +170,7 @@ endif
 # Start of targets
 
 .SUFFIXES:
-.PHONY: all clean wine_altirra
+.PHONY: all clean wine_altirra wsl_altirra
 
 all: $(BINS)
 
@@ -196,6 +197,10 @@ $(BUILDDIR)/%.$(OUT_EXT): $(SRCDIR)/%.c | $(BUILDDIR)
 # requires ALTIRRA_HOME set, and wine on the path.
 wine_altirra:
 	$($(EMUCMD)) "Z:$(subst /,\,$(EMURUN))"
+
+# requires ALTIRRA_HOME set, but uses WSL, so just path needs changing from bin/foo.xex to bin\foo.xex
+wsl_altirra:
+	$($(EMUCMD)) "$(subst /,\,$(EMURUN))"
 
 clean:
 	@$(call RMFILES,$(BUILDDIR)/*)

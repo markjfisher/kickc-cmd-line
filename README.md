@@ -17,3 +17,14 @@ cp bin/cmd-line.xex ../../for-atr/
 dir2atr -Q ../../tnfsd/mjf.atr ../../for-atr
 
 ```
+
+## Development
+
+### CLion under WSL
+
+Create a Makefile Application with following env vars:
+
+```
+ALTIRRA_HOME=/your/path/to/Altirra-3.90
+KICKC_HOME=/your/path/to/kickc
+```
